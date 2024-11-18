@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,29 +13,36 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: QRGeneratorScreen(),
+      home: QRScannerScreen(),
     );
   }
 }
 
-class QRGeneratorScreen extends StatefulWidget {
+class QRScannerScreen extends StatefulWidget {
   @override
-  _QRGeneratorScreenState createState() => _QRGeneratorScreenState();
+  _QRScannerScreenState createState() => _QRScannerScreenState();
 }
 
-class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
-  final TextEditingController _textController = TextEditingController();
-  String _qrData = "";
+class _QRScannerScreenState extends State<QRScannerScreen> {
+  final GlobalKey<QRViewControllerState> _qrKey = GlobalKey();
+  String _qrData = '';
 
-  void _generateQRCode() {
+  // Function to handle QR code scan result
+  void _onQRScanned(String data) {
     setState(() {
-      _qrData = _textController.text.trim();
+      _qrData = data;
     });
+
+    // Attempt to open the URL if it's valid
+    _openFile(data);
   }
 
-  void _shareQRCode() {
-    if (_qrData.isNotEmpty) {
-      Share.share(_qrData, subject: 'QR Code Data');
+  // Function to launch the URL
+  Future<void> _openFile(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
     }
   }
 
@@ -43,42 +50,28 @@ class _QRGeneratorScreenState extends State<QRGeneratorScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR Code Generator'),
+        title: const Text('QR Code Scanner'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _textController,
-              decoration: const InputDecoration(
-                labelText: 'Enter data for QR Code',
-                border: OutlineInputBorder(),
-              ),
+      body: Column(
+        children: [
+          Expanded(
+            child: QRView(
+              key: _qrKey,
+              onQRViewCreated: (QRViewController controller) {
+                controller.scannedDataStream.listen((scanData) {
+                  _onQRScanned(scanData.code);
+                });
+              },
             ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _generateQRCode,
-              child: const Text('Generate QR Code'),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Scanned Data: $_qrData',
+              style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 16.0),
-            if (_qrData.isNotEmpty)
-              Column(
-                children: [
-                  QrImage(
-                    data: _qrData, // Pass the QR data here
-                    version: QrVersions.auto,
-                    size: 200.0,
-                  ),
-                  const SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: _shareQRCode,
-                    child: const Text('Share QR Code Data'),
-                  ),
-                ],
-              ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
