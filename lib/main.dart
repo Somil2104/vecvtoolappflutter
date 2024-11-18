@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';  // Import for QR code scanning
+import 'package:url_launcher/url_launcher.dart';  // Import for launching URL
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp()); // Entry point to run the app
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: QRScannerScreen(),
+      title: 'QR Scanner App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: QRScannerScreen(), // Main screen
     );
   }
 }
@@ -24,23 +25,23 @@ class QRScannerScreen extends StatefulWidget {
 }
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
-  final GlobalKey<QRViewControllerState> _qrKey = GlobalKey();
+  final GlobalKey _qrKey = GlobalKey();
   String _qrData = '';
 
-  // Function to handle QR code scan result
-  void _onQRScanned(String data) {
-    setState(() {
-      _qrData = data;
-    });
+  void _onQRScanned(String? data) {
+    if (data != null) {
+      setState(() {
+        _qrData = data;
+      });
 
-    // Attempt to open the URL if it's valid
-    _openFile(data);
+      _openFile(data);
+    }
   }
 
-  // Function to launch the URL
   Future<void> _openFile(String url) async {
-    if (await canLaunch(url)) {
-      await launch(url);
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
     } else {
       throw 'Could not launch $url';
     }

@@ -2,11 +2,14 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        // Removed Flutter plugin repository as it's handled by Flutter automatically
     }
     dependencies {
-        // Ensure this is using a compatible AGP version
-        classpath 'com.android.tools.build:gradle:7.4.0'  // Example version, adjust if necessary
-        // other dependencies...
+        // Ensure you're using a compatible Android Gradle Plugin version
+        classpath 'com.android.tools.build:gradle:8.0.0'  // Update to your required version if necessary
+
+        // Ensure Kotlin plugin is compatible with your project
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22'  // Adjust Kotlin version if required
     }
 }
 
@@ -14,15 +17,13 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // No need for Flutter's plugin repository here either
     }
 }
 
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
-    project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {
